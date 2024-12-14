@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NBA Player Stats Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #ffffff;
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .dark-mode th,
+        .dark-mode td {
+            border-bottom: 1px solid #444;
+        }
+
+        th {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #f5f5f5;
+        }
+
+        .dark-mode th:hover {
+            background-color: #333;
+        }
+
+        input[type="text"], select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .dark-mode input[type="text"],
+        .dark-mode select {
+            background-color: #333;
+            color: white;
+            border-color: #444;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .dark-mode button {
+            background-color: #444;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>NBA Player Stats Dashboard</h1>
+            <button id="toggleDark">Toggle Dark Mode</button>
+        </div>
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="Search players...">
+            <select id="filterSelect">
+                <option value="all">All</option>
+                <option value="PHI">PHI</option>
+                <option value="NYK">NYK</option>
+                <option value="OKC">OKC</option>
+                <option value="CLE">CLE</option>
+            </select>
+        </div>
+        <table id="statsTable">
+            <thead>
+                <tr>
+                    <th data-sort="name">Name</th>
+                    <th data-sort="team">Team</th>
+                    <th data-sort="points">Points</th>
+                    <th data-sort="rebounds">Rebounds</th>
+                    <th data-sort="assists">Assists</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        // Player data
+        const players = [
+            { name: "Joel Embiid", team: "PHI", points: 33.0, rebounds: 10.8, assists: 5.7 },
+            { name: "Jalen Brunson", team: "NYK", points: 32.4, rebounds: 3.3, assists: 7.5 },
+            { name: "Shai Gilgeous-Alexander", team: "OKC", points: 30.2, rebounds: 7.2, assists: 6.4 },
+            { name: "Tyrese Maxey", team: "PHI", points: 29.8, rebounds: 5.2, assists: 6.8 },
+            { name: "Donovan Mitchell", team: "CLE", points: 29.6, rebounds: 5.4, assists: 4.7 }
+        ];
+
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const toggleDarkBtn = document.getElementById('toggleDark');
+        const statsTable = document.getElementById('statsTable');
+        const tableBody = statsTable.querySelector('tbody');
+
+        // Sort state
+        let currentSort = { column: null, ascending: true };
+
+        // Render table function
+        function renderTable(data) {
+            tableBody.innerHTML = '';
+            data.forEach(player => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${player.name}</td>
+                    <td>${player.team}</td>
+                    <td>${player.points}</td>
+                    <td>${player.rebounds}</td>
+                    <td>${player.assists}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Filter and search function
+        function filterAndSearchPlayers() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedTeam = filterSelect.value;
+            
+            let filteredPlayers = players.filter(player => {
+                const matchesSearch = player.name.toLowerCase().includes(searchTerm);
+                const matchesTeam = selectedTeam === 'all' || player.team === selectedTeam;
+                return matchesSearch && matchesTeam;
+            });
+
+            if (currentSort.column) {
+                filteredPlayers.sort((a, b) => {
+                    const aValue = a[currentSort.column];
+                    const bValue = b[currentSort.column];
+                    const comparison = aValue > bValue ? 1 : -1;
+                    return currentSort.ascending ? comparison : -comparison;
+                });
+            }
+
+            renderTable(filteredPlayers);
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', filterAndSearchPlayers);
+        filterSelect.addEventListener('change', filterAndSearchPlayers);
+
+        toggleDarkBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+        });
+
+        // Sorting
+        statsTable.querySelectorAll('th').forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.sort;
+                if (currentSort.column === column) {
+                    currentSort.ascending = !currentSort.ascending;
+                } else {
+                    currentSort.column = column;
+                    currentSort.ascending = true;
+                }
+                filterAndSearchPlayers();
+            });
+        });
+
+        // Initial render
+        renderTable(players);
+    </script>
+</body>
+</html>
